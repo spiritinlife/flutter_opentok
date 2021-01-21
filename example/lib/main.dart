@@ -88,7 +88,7 @@ class _MyAppState extends State<MyApp> {
             onPressed: () => _togglePublisherVideo(),
             child: Icon(
               publishVideo ? Icons.videocam : Icons.videocam_off,
-              color: publishVideo ? Colors.blueAccent : Colors.blueAccent,
+              color: Colors.blueAccent,
               size: 20.0,
             ),
             shape: CircleBorder(),
@@ -100,7 +100,7 @@ class _MyAppState extends State<MyApp> {
             onPressed: () => _onToggleMute(),
             child: Icon(
               muted ? Icons.mic : Icons.mic_off,
-              color: muted ? Colors.white : Colors.blueAccent,
+              color: Colors.blueAccent,
               size: 20.0,
             ),
             shape: CircleBorder(),
