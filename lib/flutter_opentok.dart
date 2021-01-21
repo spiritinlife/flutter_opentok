@@ -1,30 +1,21 @@
-import 'dart:async';
 import 'dart:convert';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+export 'publisher_view.dart';
+export 'subscriber_view.dart';
 
 part 'flutter_opentok.g.dart';
 
 class OTFlutter {
   static bool loggingEnabled = true;
 
-  OTFlutter._(this.channel) : assert(channel != null) {
-    channel.setMethodCallHandler(_handleMethodCall);
+  OTFlutter() : _channel = MethodChannel("plugins.indoor.solutions/opentok"){
+    _channel.setMethodCallHandler(_handleMethodCall);
   }
 
-  @visibleForTesting
-  final MethodChannel channel;
-
-  static Future<OTFlutter> init(int id) async {
-    assert(id != null);
-
-    final MethodChannel channel =
-        MethodChannel('plugins.indoor.solutions/opentok_$id');
-
-    return OTFlutter._(channel);
-  }
+  final MethodChannel _channel;
 
   // Core Events
   /// Triggered before creating OpenTok session.
@@ -49,12 +40,14 @@ class OTFlutter {
   /// Creates an OpenTok instance.
   ///
   /// The OpenTok SDK only supports one instance at a time, therefore the app should create one object only.
-  /// Only users with the same api key, session id and token can join the same channel and call each other.
-  Future<void> create(OpenTokConfiguration configuration) async {
-    return await channel.invokeMethod('create', {
+  /// Only users with the same api key, session id and token can join the same _channel and call each other.
+  Future<void> connect(OpenTokConfiguration configuration,
+      OTPublisherKitSettings publisherKitSettings) async {
+    return await _channel.invokeMethod('connect', {
       'apiKey': configuration.apiKey,
       'sessionId': configuration.sessionId,
       'token': configuration.token,
+      'publisherSettings': publisherKitSettings.toJson(),
     });
   }
 
@@ -64,7 +57,7 @@ class OTFlutter {
   /// Once the app calls destroy to destroy the created instance, you cannot use any method or callback in the SDK.
   Future<void> destroy() async {
     _removeMethodCallHandler();
-    return await channel.invokeMethod('destroy');
+    return await _channel.invokeMethod('destroy');
   }
 
   // Core Audio
@@ -72,132 +65,83 @@ class OTFlutter {
   ///
   /// The audio module is enabled by default.
   Future<void> enableAudio() async {
-    await channel.invokeMethod('enableAudio');
+    await _channel.invokeMethod('enableAudio');
   }
 
   /// Disables the audio module.
   ///
   /// The audio module is enabled by default.
   Future<void> disableAudio() async {
-    await channel.invokeMethod('disableAudio');
+    await _channel.invokeMethod('disableAudio');
   }
 
   /// Unmute the publisher audio module.
   ///
   /// The audio module is enabled by default.
   Future<void> unmutePublisherAudio() async {
-    await channel.invokeMethod('unmutePublisherAudio');
+    await _channel.invokeMethod('unmutePublisherAudio');
   }
 
   /// Mute the publisher audio module.
   ///
   /// The audio module is enabled by default.
   Future<void> mutePublisherAudio() async {
-    await channel.invokeMethod('mutePublisherAudio');
+    await _channel.invokeMethod('mutePublisherAudio');
   }
 
   /// Enables the subscriber video module.
   ///
   /// The audio module is enabled by default.
   Future<void> enablePublisherVideo() async {
-    await channel.invokeMethod('enablePublisherVideo');
+    await _channel.invokeMethod('enablePublisherVideo');
   }
 
   /// Disables the publishers video module.
   ///
   /// The audio module is enabled by default.
   Future<void> disablePublisherVideo() async {
-    await channel.invokeMethod('disablePublisherVideo');
+    await _channel.invokeMethod('disablePublisherVideo');
   }
 
   /// Disables the subscribers audio.
   Future<void> muteSubscriberAudio() async {
-    await channel.invokeMethod('muteSubscriberAudio');
+    await _channel.invokeMethod('muteSubscriberAudio');
   }
 
   /// Enables the subscribers audio.
   Future<void> unmuteSubscriberAudio() async {
-    await channel.invokeMethod('unmuteSubscriberAudio');
+    await _channel.invokeMethod('unmuteSubscriberAudio');
   }
 
   // Core Video
   /// Enables the video module.
   ///
-  /// You can call this method either before or after [joinChannel]. If you call this method before joining a channel, the service starts in the video mode. If you call this method during an audio call, the audio mode switches to the video mode.
+  /// You can call this method either before or after [joinChannel]. If you call this method before joining a _channel, the service starts in the video mode. If you call this method during an audio call, the audio mode switches to the video mode.
   /// To disable the video, call the [disableVideo] method.
   /// This method affects the internal engine and can be called after calling the [leaveChannel] method.
   Future<void> enableVideo() async {
-    await channel.invokeMethod('enableVideo');
+    await _channel.invokeMethod('enableVideo');
   }
 
   /// Disables the video module.
   ///
-  /// You can call this method either before or after [joinChannel]. If you call this method before joining a channel, the service starts in audio mode. If you call this method during a video call, the video mode switches to the audio mode.
+  /// You can call this method either before or after [joinChannel]. If you call this method before joining a _channel, the service starts in audio mode. If you call this method during a video call, the video mode switches to the audio mode.
   /// To enable the video mode, call the [enableVideo] method.
   /// This method affects the internal engine and can be called after calling the [leaveChannel] method.
   Future<void> disableVideo() async {
-    await channel.invokeMethod('disableVideo');
-  }
-
-  /// Creates the video renderer Widget.
-  ///
-  static Widget createNativeView(
-    int uid, {
-    OTPublisherKitSettings publisherSettings,
-    int width,
-    int height,
-    Function(int viewId) created,
-  }) {
-    Map<String, dynamic> creationParams = {};
-
-    if (width != null && height != null) {
-      creationParams["width"] = width;
-      creationParams["height"] = height;
-    }
-
-    if (publisherSettings != null) {
-      creationParams["publisherSettings"] =
-          jsonEncode(publisherSettings.toJson());
-    }
-
-    creationParams["loggingEnabled"] = OTFlutter.loggingEnabled;
-
-    if (OTFlutter.loggingEnabled) {
-      print(creationParams);
-    }
-
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
-      return UiKitView(
-        key: new ObjectKey(uid.toString()),
-        viewType: 'OpenTokRendererView',
-        onPlatformViewCreated: (viewId) {
-          if (created != null) {
-            created(viewId);
-          }
-        },
-        creationParams: creationParams,
-        creationParamsCodec: StandardMessageCodec(),
-      );
-    }
-
-    return Text('$defaultTargetPlatform is not yet supported by this plugin');
-  }
-
-  /// Remove the video renderer Widget.
-  Future<void> removeNativeView(int viewId) async {
-    await channel.invokeMethod('removeNativeView', {'viewId': viewId});
+    await _channel.invokeMethod('disableVideo');
   }
 
   // Camera Control
   /// Switches between front and rear cameras.
   Future<void> switchCamera() async {
-    await channel.invokeMethod('switchCamera');
+    await _channel.invokeMethod('switchCamera');
   }
 
   // Miscellaneous Methods
   /// Gets the SDK version.
   Future<String> getSdkVersion() async {
-    final String version = await channel.invokeMethod('getSdkVersion');
+    final String version = await _channel.invokeMethod('getSdkVersion');
     return version;
   }
 
@@ -248,11 +192,11 @@ class OTFlutter {
   }
 
   void _removeMethodCallHandler() {
-    channel.setMethodCallHandler(null);
+    _channel.setMethodCallHandler(null);
   }
 
   Future<String> get platformVersion async {
-    final String version = await channel.invokeMethod('getPlatformVersion');
+    final String version = await _channel.invokeMethod('getPlatformVersion');
     return version;
   }
 }
