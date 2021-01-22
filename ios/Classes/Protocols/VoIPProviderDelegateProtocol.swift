@@ -6,3 +6,12 @@
 //
 
 import Foundation
+
+public protocol VoIPProviderDelegate {
+    func willConnect()
+    func didConnect()
+    func didDisconnect()
+    func didReceiveVideo()
+    func didCreateStream()
+    func didCreatePublisherStream()
+}

@@ -6,3 +6,11 @@
 //
 
 import Foundation
+
+public protocol FlutterViewControllerImpl {
+    func setup()
+    
+    func onMethodCall(call: FlutterMethodCall, result: @escaping FlutterResult)
+    
+    func channelInvokeMethod(_ method: String, arguments: Any?)
+}
