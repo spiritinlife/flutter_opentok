@@ -16,6 +16,7 @@ interface VoIPProviderDelegate {
     fun didReceiveVideo()
     fun didCreateStream()
     fun didCreatePublisherStream()
+    fun onSignalReceived(remote: Boolean, type: String?, data: String?);
 }
 
 public interface VoIPProvider {
@@ -40,7 +41,7 @@ public interface VoIPProvider {
     fun disablePublisherVideo()
 }
 
-class OpenTokVoIPImpl(private val context: Context, private val delegate: VoIPProviderDelegate) : VoIPProvider, Session.SessionListener, SubscriberKit.SubscriberListener, PublisherKit.PublisherListener {
+class OpenTokVoIPImpl(private val context: Context, private val delegate: VoIPProviderDelegate) : VoIPProvider, Session.SessionListener, SubscriberKit.SubscriberListener, PublisherKit.PublisherListener, Session.SignalListener {
 
     val subscriberView: View?
         get() = subscriber?.view
@@ -148,10 +149,13 @@ class OpenTokVoIPImpl(private val context: Context, private val delegate: VoIPPr
 
         session = Session.Builder(context, key, sessionId).build()
         session.setSessionListener(this);
+        session.setSignalListener(this);
         session.connect(token)
     }
 
     private fun disconnectSession() {
+        session.setSignalListener(null)
+        session.setSessionListener(null)
         session.disconnect()
     }
 
@@ -262,5 +266,10 @@ class OpenTokVoIPImpl(private val context: Context, private val delegate: VoIPPr
 
     fun switchCamera() {
         publisher?.cycleCamera()
+    }
+
+    override fun onSignalReceived(session: Session, type: String?, data: String?, connection: Connection?) {
+        val isRemote = connection != session.connection
+        delegate.onSignalReceived(isRemote, type, data)
     }
 }

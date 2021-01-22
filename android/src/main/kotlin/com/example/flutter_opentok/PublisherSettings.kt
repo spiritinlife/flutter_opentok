@@ -5,7 +5,6 @@ class PublisherSettings(val name: String, val audioTrack: Boolean, val videoTrac
 
     companion object {
         fun fromMap(attrs: Map<String, Any>): PublisherSettings {
-            Log.e("DLMEDW", attrs.toString());
             return PublisherSettings(
                     attrs["name"]?.toString() ?: error("No name given"),
                     attrs["audioTrack"]?.toString()?.toBoolean() ?: true,

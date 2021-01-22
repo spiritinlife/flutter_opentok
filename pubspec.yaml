@@ -5,13 +5,14 @@ author: Indoor Solutions <genert.org@indoor.solutions>
 homepage: https://github.com/ninjasolutions/flutter_opentok
 
 environment:
-  sdk: ">=2.2.0 <3.0.0"
+  sdk: ">=2.2.2 <3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
   json_annotation: ^3.0.0
   permission_handler: ^5.0.1+1
+  http:
 
 dev_dependencies:
   flutter_test:
