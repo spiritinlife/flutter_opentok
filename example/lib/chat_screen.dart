@@ -36,7 +36,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: null,
+        appBar: AppBar(),
         backgroundColor: Colors.white.withOpacity(0.6),
         body: Column(
           mainAxisAlignment: MainAxisAlignment.end,
