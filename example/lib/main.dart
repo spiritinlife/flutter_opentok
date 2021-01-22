@@ -1,9 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_opentok/flutter_opentok.dart';
 import 'package:flutter_opentok_example/chat_fab.dart';
 import 'package:flutter_opentok_example/chat_screen.dart';
 import 'package:flutter_opentok_example/settings.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:http/http.dart' as http;
 
 import 'movable_stack_item.dart';
 
@@ -37,6 +40,11 @@ class _MyAppState extends State<MyApp> {
   void initialize() async {
     await Permission.camera.request();
     await Permission.microphone.request();
+
+    var data = jsonDecode((await http.get(
+            'https://gist.githubusercontent.com/spiritinlife/d5adecb8f006d5154e3e4921c279e647/raw/5cc18ee8f6163f6bf02d3661718139a3ef67b8b5/opentok_dummy_creds.json'))
+        .body);
+
     if (API_KEY.isEmpty) {
       setState(() {
         _infoStrings.add(
@@ -46,7 +54,7 @@ class _MyAppState extends State<MyApp> {
       return;
     }
 
-    if (sessionId.isEmpty) {
+    if (data['session_id'].isEmpty) {
       setState(() {
         _infoStrings.add(
             "SESSION_ID missing, please provide your SESSION_ID in settings.dart");
@@ -55,7 +63,7 @@ class _MyAppState extends State<MyApp> {
       return;
     }
 
-    if (token.isEmpty) {
+    if (data['token'].isEmpty) {
       setState(() {
         _infoStrings
             .add("TOKEN missing, please provide your TOKEN in settings.dart");
@@ -65,9 +73,9 @@ class _MyAppState extends State<MyApp> {
     }
 
     openTokConfiguration = OpenTokConfiguration(
-      token: token,
+      token: data['token'],
       apiKey: API_KEY,
-      sessionId: sessionId,
+      sessionId: data['session_id'],
     );
 
     var publisherSettings = OTPublisherKitSettings(
@@ -193,7 +201,9 @@ class _MyAppState extends State<MyApp> {
           ),
           backgroundColor: Colors.black,
           floatingActionButton: ChatFab(
-            message: chatMessages.firstWhere((signal) => signal.isRemote, orElse: () => null)?.data,
+            message: chatMessages
+                .firstWhere((signal) => signal.isRemote, orElse: () => null)
+                ?.data,
             onFabClicked: goToChatScreen,
           ),
           body: Builder(
