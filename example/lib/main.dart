@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_opentok/flutter_opentok.dart';
+import 'package:flutter_opentok_example/chat_fab.dart';
+import 'package:flutter_opentok_example/chat_screen.dart';
 import 'package:flutter_opentok_example/settings.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'movable_stack_item.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(MaterialApp(home: MyApp()));
 
 class MyApp extends StatefulWidget {
   @override
@@ -16,6 +18,7 @@ class _MyAppState extends State<MyApp> {
   final _infoStrings = <String>[];
   bool muted = false;
   bool publishVideo = true;
+  List<Signal> chatMessages = List();
   OTFlutter controller;
   OpenTokConfiguration openTokConfiguration;
 
@@ -27,6 +30,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void dispose() {
+    controller.signals.removeListener(onSignalReceived);
     super.dispose();
   }
 
@@ -42,7 +46,7 @@ class _MyAppState extends State<MyApp> {
       return;
     }
 
-    if (SESSION_ID.isEmpty) {
+    if (sessionId.isEmpty) {
       setState(() {
         _infoStrings.add(
             "SESSION_ID missing, please provide your SESSION_ID in settings.dart");
@@ -51,7 +55,7 @@ class _MyAppState extends State<MyApp> {
       return;
     }
 
-    if (TOKEN.isEmpty) {
+    if (token.isEmpty) {
       setState(() {
         _infoStrings
             .add("TOKEN missing, please provide your TOKEN in settings.dart");
@@ -61,9 +65,9 @@ class _MyAppState extends State<MyApp> {
     }
 
     openTokConfiguration = OpenTokConfiguration(
-      token: TOKEN,
+      token: token,
       apiKey: API_KEY,
-      sessionId: SESSION_ID,
+      sessionId: sessionId,
     );
 
     var publisherSettings = OTPublisherKitSettings(
@@ -73,16 +77,38 @@ class _MyAppState extends State<MyApp> {
     );
 
     controller = OTFlutter();
+    controller.signals.addListener(onSignalReceived);
     controller.connect(openTokConfiguration, publisherSettings);
+  }
+
+  void onSignalReceived() {
+    chatMessages = controller.signals.signals;
+    setState(() {});
+  }
+
+  void goToChatScreen() {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: false,
+        pageBuilder: (BuildContext context, _, __) {
+          return ChatScreen(
+              controller: controller,
+              messages: chatMessages,
+              onSendMessage: (String message) {
+                controller.sendSignal(message);
+              });
+        },
+      ),
+    );
   }
 
   // Toolbar layout
   Widget _toolbar() {
     return Container(
-      alignment: Alignment.bottomCenter,
-      padding: const EdgeInsets.symmetric(vertical: 48.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      padding: const EdgeInsets.only(bottom: 16),
+      alignment: Alignment.bottomLeft,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
         children: <Widget>[
           RawMaterialButton(
             onPressed: () => _togglePublisherVideo(),
@@ -96,6 +122,9 @@ class _MyAppState extends State<MyApp> {
             fillColor: Colors.white,
             padding: const EdgeInsets.all(12.0),
           ),
+          SizedBox(
+            height: 8,
+          ),
           RawMaterialButton(
             onPressed: () => _onToggleMute(),
             child: Icon(
@@ -107,6 +136,9 @@ class _MyAppState extends State<MyApp> {
             elevation: 2.0,
             fillColor: Colors.white,
             padding: const EdgeInsets.all(12.0),
+          ),
+          SizedBox(
+            height: 8,
           ),
           RawMaterialButton(
             onPressed: () => _onSwitchCamera(),
@@ -121,52 +153,6 @@ class _MyAppState extends State<MyApp> {
             padding: const EdgeInsets.all(12.0),
           )
         ],
-      ),
-    );
-  }
-
-  /// Info panel to show logs
-  Widget _panel() {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 48),
-      alignment: Alignment.bottomCenter,
-      child: FractionallySizedBox(
-        heightFactor: 0.5,
-        child: Container(
-          padding: EdgeInsets.symmetric(vertical: 48),
-          child: ListView.builder(
-            reverse: true,
-            itemCount: _infoStrings.length,
-            itemBuilder: (BuildContext context, int index) {
-              if (_infoStrings.length == 0) {
-                return null;
-              }
-              return Padding(
-                padding: EdgeInsets.symmetric(vertical: 3, horizontal: 10),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: Container(
-                        padding:
-                            EdgeInsets.symmetric(vertical: 2, horizontal: 5),
-                        decoration: BoxDecoration(
-                            color: Colors.yellowAccent,
-                            borderRadius: BorderRadius.circular(5)),
-                        child: Text(
-                          _infoStrings[index],
-                          style: TextStyle(
-                            color: Colors.blueGrey,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ),
       ),
     );
   }
@@ -206,6 +192,10 @@ class _MyAppState extends State<MyApp> {
             title: const Text('OpenTok SDK'),
           ),
           backgroundColor: Colors.black,
+          floatingActionButton: ChatFab(
+            message: chatMessages.firstWhere((signal) => signal.isRemote, orElse: () => null)?.data,
+            onFabClicked: goToChatScreen,
+          ),
           body: Builder(
             builder: (context) => Container(
               color: Colors.yellow,
@@ -224,7 +214,6 @@ class _MyAppState extends State<MyApp> {
                     initXPos: 5,
                     initYPos: 5,
                   ),
-                  _panel(),
                   _toolbar()
                 ],
               ),

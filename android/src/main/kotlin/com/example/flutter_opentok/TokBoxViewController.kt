@@ -4,20 +4,23 @@ import android.content.Context
 import android.graphics.Color
 import android.widget.FrameLayout
 import io.flutter.plugin.common.BinaryMessenger
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
 class TokBoxViewController(
         private val context: Context,
         messenger: BinaryMessenger
-) : VoIPProviderDelegate, MethodChannel.MethodCallHandler {
+) : VoIPProviderDelegate, MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
 
     val publisherView: FrameLayout;
     val subsciberView: FrameLayout;
     private val provider: OpenTokVoIPImpl = OpenTokVoIPImpl(context, this)
+    private var signalEventsSink: EventChannel.EventSink? = null
 
     init {
         MethodChannel(messenger, "plugins.indoor.solutions/opentok").setMethodCallHandler(this)
+        EventChannel(messenger, "plugins.indoor.solutions/opentok_messages").setStreamHandler(this)
 
         publisherView = FrameLayout(context)
         subsciberView = FrameLayout(context)
@@ -48,16 +51,15 @@ class TokBoxViewController(
             "mutePublisherAudio" -> provider.mutePublisherAudio()
             "muteSubscriberAudio" -> provider.muteSubscriberAudio()
             "unmuteSubscriberAudio" -> provider.unmuteSubscriberAudio()
-            "sendMessage" -> provider.sendMessage(
+            "sendSignal" -> provider.sendMessage(
                     methodCall.argument<String>("message")!!,
-                    methodCall.argument<String>("type")!!
+                    methodCall.argument<String>("type") ?: ""
             )
             "switchCamera" -> provider.switchCamera()
 //            "switchAudioToSpeaker" -> provider.switchAudioToSpeaker()
 //            "switchAudioToReceiver" -> provider.switchAudioToReceiver()
 //
 //            "onCallDispose" -> setOnCallDisposeResult(result)
-//            "sendMessage" -> tokboxView.sendMessage(methodCall.argument<String>("message"))
             else -> result.notImplemented()
         }
     }
@@ -84,9 +86,22 @@ class TokBoxViewController(
         publisherView.addView(provider.publisherView)
     }
 
+    override fun onSignalReceived(remote: Boolean, type: String?, data: String?) {
+        signalEventsSink?.success(Signal(remote, type, data).toMap())
+    }
+
     fun initializePublisherView(args: Map<String, String>) {
         provider.initializePublisherView(args);
     }
+
+    override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+        signalEventsSink = events!!;
+    }
+
+    override fun onCancel(arguments: Any?) {
+        signalEventsSink = null
+    }
+
 
 }
 

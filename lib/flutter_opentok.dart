@@ -1,23 +1,36 @@
 import 'dart:convert';
+import 'package:flutter_opentok/signal.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 export 'publisher_view.dart';
 export 'subscriber_view.dart';
+export 'signal.dart';
+import 'signals.dart';
 
 part 'flutter_opentok.g.dart';
 
 class OTFlutter {
   static bool loggingEnabled = true;
 
-  OTFlutter() : _channel = MethodChannel("plugins.indoor.solutions/opentok"){
+  OTFlutter()
+      : _channel = MethodChannel("plugins.indoor.solutions/opentok"),
+        _eventChannel =
+            new EventChannel('plugins.indoor.solutions/opentok_messages') {
     _channel.setMethodCallHandler(_handleMethodCall);
+    _eventChannel.receiveBroadcastStream().listen(onSignalEvent);
   }
 
+  final Signals signals = Signals();
   final MethodChannel _channel;
+  final EventChannel _eventChannel;
 
   // Core Events
+
+  /// Triggered before creating OpenTok session.
+  List<Function(Signal signal)> onSignalListeners = List();
+
   /// Triggered before creating OpenTok session.
   static VoidCallback onWillConnect;
 
@@ -35,6 +48,11 @@ class OTFlutter {
 
   /// Occurs when publisher stream has been created.
   static VoidCallback onCreatePublisherStream;
+
+  void onSignalEvent(dynamic signal) {
+    print("notify ${onSignalListeners.length} listeners");
+    signals.addSignal(Signal.fromMap(signal));
+  }
 
   // Core Methods
   /// Creates an OpenTok instance.
@@ -136,6 +154,15 @@ class OTFlutter {
   /// Switches between front and rear cameras.
   Future<void> switchCamera() async {
     await _channel.invokeMethod('switchCamera');
+  }
+
+  // Camera Control
+  /// Switches between front and rear cameras.
+  Future<void> sendSignal(String message, {String type = ''}) async {
+    await _channel.invokeMethod('sendSignal', {
+      'message': message,
+      'type': type,
+    });
   }
 
   // Miscellaneous Methods
