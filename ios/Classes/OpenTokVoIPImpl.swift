@@ -9,41 +9,16 @@ import Foundation
 import OpenTok
 import os.log
 
-protocol VoIPProviderDelegate {
-    func willConnect()
-    func didConnect()
-    func didDisconnect()
-    func didReceiveVideo()
-    func didCreateStream()
-    func didCreatePublisherStream()
-}
-
-public protocol VoIPProvider {
-    /// Whether VoIP connection has been established.
-    var isConnected: Bool { get }
-
-    // Set whether publisher has audio or not.
-    var isAudioOnly: Bool { get set }
-
-    func connect(apiKey: String, sessionId: String, token: String)
-    func disconnect()
-
-    func mutePublisherAudio()
-    func unmutePublisherAudio()
-
-    func muteSubscriberAudio()
-    func unmuteSubscriberAudio()
-
-    func enablePublisherVideo()
-    func disablePublisherVideo()
-}
-
 class OpenTokVoIPImpl: NSObject {
     var delegate: VoIPProviderDelegate?
     var publisherSettings: PublisherSettings?
 
     var subscriberView: UIView? {
         return subscriber?.view
+    }
+    
+    var publisherView: UIView? {
+        return publisher?.view
     }
 
     init(delegate: VoIPProviderDelegate?, publisherSettings: PublisherSettings?) {
