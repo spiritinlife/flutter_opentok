@@ -25,4 +25,6 @@ public protocol VoIPProvider {
 
     func enablePublisherVideo()
     func disablePublisherVideo()
+    
+    func sendMessage(message: String, messageType: String)
 }

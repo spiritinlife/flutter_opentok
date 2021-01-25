@@ -49,6 +49,7 @@ class FlutterOpenTokController: NSObject {
         self.registrar = registrar
         
         channel = FlutterMethodChannel(name: channelName, binaryMessenger: registrar.messenger())
+        FlutterEventChannel(name: <#T##String#>, binaryMessenger: <#T##FlutterBinaryMessenger#>)
         
         super.init()
     }
@@ -149,8 +150,6 @@ extension FlutterOpenTokController: FlutterViewControllerImpl {
     }
     
     func onMethodCall(call: FlutterMethodCall, result: @escaping FlutterResult) {
-        print("methodcallcalled")
-        print(call.method)
         if call.method == "connect" {
             guard let args = call.arguments else {
                 return
@@ -163,19 +162,31 @@ extension FlutterOpenTokController: FlutterViewControllerImpl {
                let publisherArg = methodArgs["publisherSettings"] as? AnyObject{
                 print(apiKey)
                 provider?.connect(apiKey: apiKey, sessionId: sessionId, token: token)
-//                do {
-//                    let jsonDecoder = JSONDecoder()
-//
-//                    publisherSettings = try jsonDecoder.decode(PublisherSettings.self, from: publisherArg.data(using: .utf8)!)
-//                } catch {
-//                    if SwiftFlutterOpentokPlugin.loggingEnabled {
-//                        print("OpenTok publisher settings error: \(error.localizedDescription)")
-//                    }
-//                }
+                //                do {
+                //                    let jsonDecoder = JSONDecoder()
+                //
+                //                    publisherSettings = try jsonDecoder.decode(PublisherSettings.self, from: publisherArg.data(using: .utf8)!)
+                //                } catch {
+                //                    if SwiftFlutterOpentokPlugin.loggingEnabled {
+                //                        print("OpenTok publisher settings error: \(error.localizedDescription)")
+                //                    }
+                //                }
                 result(nil)
             } else {
                 result("iOS could not extract flutter arguments in method: (create)")
             }
+        } else if call.method == "sendSignal" {
+            guard let args = call.arguments else {
+                return
+            }
+            
+            if let methodArgs = args as? [String: Any],
+               let textMessage = methodArgs["message"] as? String,
+               let type = methodArgs["type"] as? String
+            {
+                provider?.sendMessage(message: textMessage, messageType: type)
+            }
+            result(nil)
         } else if call.method == "destroy" {
             provider?.disconnect()
             result(nil)

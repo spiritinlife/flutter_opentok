@@ -57,6 +57,10 @@ extension OpenTokVoIPImpl: VoIPProvider {
 
         createSession(key: apiKey, sessionId: sessionId, token: token)
     }
+    
+    func sendMessage(message: String, messageType: String) {
+        session.signal(withType: "", string: message, connection: nil, error: nil)
+    }
 
     func disconnect() {
         disconnectSession()
@@ -301,10 +305,6 @@ extension OpenTokVoIPImpl: OTSessionDelegate {
         os_log("[OTSubscriberDelegate] %s", type: .info, #function)
 
         disconnectSession()
-    }
-
-    public func session(_: OTSession, receivedSignalType type: String?, from connection: OTConnection?, with string: String?) {
-        os_log("[OTSubscriberDelegate] %s %s %s %s", type: .info, #function, type ?? "<No signal type>", connection ?? "<Nil connection>", string ?? "<No string>")
     }
 }
 
