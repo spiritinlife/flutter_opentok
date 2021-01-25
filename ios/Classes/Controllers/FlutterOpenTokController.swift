@@ -16,7 +16,9 @@ class FlutterOpenTokController: NSObject {
     
     private let registrar: FlutterPluginRegistrar!
     private var channel: FlutterMethodChannel!
-    
+    private var eventChannel: FlutterEventChannel!
+    private var eventSink: FlutterEventSink!
+
     // Publisher settings
     var publisherSettings: PublisherSettings?
     
@@ -44,14 +46,14 @@ class FlutterOpenTokController: NSObject {
     }
     
     public init(registrar: FlutterPluginRegistrar) {
-        let channelName = "plugins.indoor.solutions/opentok"
-        
         self.registrar = registrar
         
-        channel = FlutterMethodChannel(name: channelName, binaryMessenger: registrar.messenger())
-        FlutterEventChannel(name: <#T##String#>, binaryMessenger: <#T##FlutterBinaryMessenger#>)
-        
+        channel = FlutterMethodChannel(name: "plugins.indoor.solutions/opentok", binaryMessenger: registrar.messenger())
+        eventChannel = FlutterEventChannel(name: "plugins.indoor.solutions/opentok_messages", binaryMessenger: registrar.messenger())
+
         super.init()
+        
+        eventChannel.setStreamHandler(self)
     }
     
     deinit {
@@ -245,7 +247,18 @@ extension FlutterOpenTokController: FlutterViewControllerImpl {
     }
 }
 
-extension FlutterOpenTokController: VoIPProviderDelegate {
+extension FlutterOpenTokController: VoIPProviderDelegate, FlutterStreamHandler {
+    public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+        print("goes on listen")
+        eventSink = events
+        return nil
+    }
+
+    public func onCancel(withArguments arguments: Any?) -> FlutterError? {
+        print("goes on cancel")
+        return nil
+    }
+    
     func didCreateStream() {
         channelInvokeMethod("onCreateStream", arguments: nil)
     }
@@ -313,6 +326,11 @@ extension FlutterOpenTokController: VoIPProviderDelegate {
                 make.right.equalTo(subscriberView)
             }
         }
+    }
+    
+    func onSignalReceived(isRemote: Bool, type: String?, data: String?) {
+        var someDict:[String:Any] =  ["isRemote": isRemote, "type": type, "data": data]
+        eventSink(someDict)
     }
 }
 

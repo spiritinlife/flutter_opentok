@@ -14,4 +14,6 @@ public protocol VoIPProviderDelegate {
     func didReceiveVideo()
     func didCreateStream()
     func didCreatePublisherStream()
+    
+    func onSignalReceived(isRemote: Bool, type: String?, data: String?)
 }
