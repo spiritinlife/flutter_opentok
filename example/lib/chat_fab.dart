@@ -13,13 +13,10 @@ class ChatFab extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         message != null
-            ? DissapearingWidget(
-                duration: Duration(milliseconds: 5000),
-                child: ActionChip(
-                  label: Text(message),
-                  backgroundColor: Theme.of(context).primaryColor,
-                  onPressed: onFabClicked,
-                ),
+            ? ActionChip(
+                label: Text(message, style: TextStyle(color: Colors.white)),
+                backgroundColor: Theme.of(context).primaryColor,
+                onPressed: onFabClicked,
               )
             : SizedBox(),
         FloatingActionButton(
