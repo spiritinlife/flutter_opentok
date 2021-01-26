@@ -189,6 +189,9 @@ extension FlutterOpenTokController: FlutterViewControllerImpl {
                 provider?.sendMessage(message: textMessage, messageType: type)
             }
             result(nil)
+        } else if call.method == "switchCamera" {
+            provider?.changeCameraPosition()
+            result(nil)
         } else if call.method == "destroy" {
             provider?.disconnect()
             result(nil)

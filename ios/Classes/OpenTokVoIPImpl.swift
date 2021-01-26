@@ -62,6 +62,14 @@ extension OpenTokVoIPImpl: VoIPProvider {
         session.signal(withType: "", string: message, connection: nil, error: nil)
     }
     
+    func changeCameraPosition(){
+        if publisher.cameraPosition == .back {
+            publisher.cameraPosition = .front
+        } else{
+            publisher.cameraPosition = .back
+        }
+    }
+    
     func disconnect() {
         disconnectSession()
     }
@@ -334,6 +342,8 @@ extension OpenTokVoIPImpl: OTPublisherDelegate {
     
     public func publisher(_: OTPublisher, didChangeCameraPosition position: AVCaptureDevice.Position) {
         os_log("[OTSubscriberDelegate] %s %d", type: .info, #function, position.rawValue)
+        
+        print("camera position changed")
     }
 }
 

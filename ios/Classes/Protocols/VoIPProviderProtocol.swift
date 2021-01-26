@@ -26,5 +26,6 @@ public protocol VoIPProvider {
     func enablePublisherVideo()
     func disablePublisherVideo()
     
+    func changeCameraPosition()
     func sendMessage(message: String, messageType: String)
 }
