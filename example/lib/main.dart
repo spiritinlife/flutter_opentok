@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_opentok/flutter_opentok.dart';
@@ -42,7 +43,8 @@ class _MyAppState extends State<MyApp> {
     await Permission.microphone.request();
 
     var data = jsonDecode((await http.get(
-            'https://gist.githubusercontent.com/spiritinlife/d5adecb8f006d5154e3e4921c279e647/raw/5cc18ee8f6163f6bf02d3661718139a3ef67b8b5/opentok_dummy_creds.json'))
+            'https://gist.githubusercontent.com/spiritinlife/d5adecb8f006d5154e3e4921c279e647/raw/?cachebust=' +
+                Random().nextDouble().toString()))
         .body);
 
     if (API_KEY.isEmpty) {
