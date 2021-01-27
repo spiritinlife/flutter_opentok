@@ -211,8 +211,8 @@ private extension OpenTokVoIPImpl {
                 os_log("[OpenTokVoIPImpl] Unpublish")
             }
             
-            session.unpublish(publisher, error: nil)
-            publisher = nil
+//            session.unpublish(publisher, error: nil)
+//            publisher = nil
         }
     }
     
@@ -232,8 +232,8 @@ private extension OpenTokVoIPImpl {
                 os_log("[OpenTokVoIPImpl] Unsubscribe")
             }
             
-            session.unsubscribe(subscriber, error: nil)
-            subscriber = nil
+//            session.unsubscribe(subscriber, error: nil)
+//            subscriber = nil
         }
     }
     

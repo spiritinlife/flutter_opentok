@@ -131,6 +131,17 @@ class OTFlutter {
     await _channel.invokeMethod('unmuteSubscriberAudio');
   }
 
+  // Disconnects the publisher.
+  Future<void> disconnectPublisher() async {
+    await _channel.invokeMethod('disconnectPublisher');
+  }
+
+  // Reconnects the publisher.
+  Future<void> reconnectPublisher() async {
+    //await _channel.invokeMethod('reconnectPublisher');
+    await _channel.invokeMethod('connect');
+  }
+
   // Core Video
   /// Enables the video module.
   ///

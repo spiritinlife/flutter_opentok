@@ -219,6 +219,12 @@ extension FlutterOpenTokController: FlutterViewControllerImpl {
         } else if call.method == "switchAudioToReceiver" {
             switchAudioSessionToReceiver()
             result(nil)
+        } else if call.method == "disconnectPublisher" {
+            provider.disconnect()
+            result(nil)
+        } else if call.method == "reconnectPublisher" {
+            //provider.connect(apiKey: <#T##String#>, sessionId: <#T##String#>, token: <#T##String#>)
+            result(nil)
         } else if call.method == "getSdkVersion" {
             result(OPENTOK_LIBRARY_VERSION)
         } else {
@@ -252,13 +258,11 @@ extension FlutterOpenTokController: FlutterViewControllerImpl {
 
 extension FlutterOpenTokController: VoIPProviderDelegate, FlutterStreamHandler {
     public func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
-        print("goes on listen")
         eventSink = events
         return nil
     }
 
     public func onCancel(withArguments arguments: Any?) -> FlutterError? {
-        print("goes on cancel")
         return nil
     }
     

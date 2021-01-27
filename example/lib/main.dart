@@ -22,9 +22,11 @@ class _MyAppState extends State<MyApp> {
   final _infoStrings = <String>[];
   bool muted = false;
   bool publishVideo = true;
+  bool isConnected = true;
   List<Signal> chatMessages = List();
   OTFlutter controller;
   OpenTokConfiguration openTokConfiguration;
+  OTPublisherKitSettings publisherSettings;
 
   @override
   void initState() {
@@ -80,7 +82,7 @@ class _MyAppState extends State<MyApp> {
       sessionId: data['session_id'],
     );
 
-    var publisherSettings = OTPublisherKitSettings(
+    publisherSettings = OTPublisherKitSettings(
       name: "Mr. John Doe",
       audioTrack: true,
       videoTrack: publishVideo,
@@ -120,6 +122,21 @@ class _MyAppState extends State<MyApp> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: <Widget>[
+          RawMaterialButton(
+            onPressed: () => _toogleSessionConnectivity(),
+            child: Icon(
+              isConnected ? Icons.call_end : Icons.add_call,
+              color: Colors.blueAccent,
+              size: 20.0,
+            ),
+            shape: CircleBorder(),
+            elevation: 2.0,
+            fillColor: Colors.white,
+            padding: const EdgeInsets.all(12.0),
+          ),
+          SizedBox(
+            height: 8,
+          ),
           RawMaterialButton(
             onPressed: () => _togglePublisherVideo(),
             child: Icon(
@@ -165,6 +182,18 @@ class _MyAppState extends State<MyApp> {
         ],
       ),
     );
+  }
+
+  void _toogleSessionConnectivity() async {
+    if (isConnected) {
+      controller.disconnectPublisher();
+    } else {
+      controller.connect(openTokConfiguration, publisherSettings);
+    }
+
+    setState(() {
+      isConnected = !isConnected;
+    });
   }
 
   void _togglePublisherVideo() async {
